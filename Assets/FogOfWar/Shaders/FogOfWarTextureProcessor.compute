@@ -1,0 +1,191 @@
+#pragma kernel Main
+#pragma kernel HorizontalBlur
+#pragma kernel VerticalBlur
+
+#define BlurNumThreads 32
+#define BlurMaxRadius 32
+#define BlurCacheSize (BlurNumThreads + BlurMaxRadius * 2)
+
+static const float UpscaleGrayColor = 0.6;
+static const float UpscalePatterns[256] =
+{
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, UpscaleGrayColor,
+    0, 0, UpscaleGrayColor, 1,
+    
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    UpscaleGrayColor, 0, 0, 0,
+    1, UpscaleGrayColor, 0, 0,
+    
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    1, 1, 1, 1,
+    1, 1, 1, 1,
+    
+    0, 0, UpscaleGrayColor, 1,
+    0, 0, 0, UpscaleGrayColor,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    
+    0, 0, 1, 1,
+    0, 0, 1, 1,
+    0, 0, 1, 1,
+    0, 0, 1, 1,
+    
+    0, 0, UpscaleGrayColor, 1,
+    0, 0, 0, UpscaleGrayColor,
+    UpscaleGrayColor, 0, 0, 0,
+    1, UpscaleGrayColor, 0, 0,
+    
+    0, UpscaleGrayColor, 1, 1,
+    UpscaleGrayColor, 1, 1, 1,
+    1, 1, 1, 1,
+    1, 1, 1, 1,
+    
+    1, UpscaleGrayColor, 0, 0,
+    UpscaleGrayColor, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    
+    1, UpscaleGrayColor, 0, 0,
+    UpscaleGrayColor, 0, 0, 0,
+    0, 0, 0, UpscaleGrayColor,
+    0, 0, UpscaleGrayColor, 1,
+    
+    1, 1, 0, 0,
+    1, 1, 0, 0,
+    1, 1, 0, 0,
+    1, 1, 0, 0,
+    
+    1, 1, UpscaleGrayColor, 0,
+    1, 1, 1, UpscaleGrayColor,
+    1, 1, 1, 1,
+    1, 1, 1, 1,
+    
+    1, 1, 1, 1,
+    1, 1, 1, 1,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    
+    1, 1, 1, 1,
+    1, 1, 1, 1,
+    UpscaleGrayColor, 1, 1, 1,
+    0, UpscaleGrayColor, 1, 1,
+    
+    1, 1, 1, 1,
+    1, 1, 1, 1,
+    1, 1, 1, UpscaleGrayColor,
+    1, 1, UpscaleGrayColor, 0,
+    
+    1, 1, 1, 1,
+    1, 1, 1, 1,
+    1, 1, 1, 1,
+    1, 1, 1, 1
+};
+
+ByteAddressBuffer _RawFOWBuffer;
+RWBuffer<float> _FOWLerpBuffer;
+RWTexture2D<float> _FOWTexture;
+uint _RawWidth;
+float _LerpAmount;
+
+Buffer<float> _BlurWeights;
+Texture2D<float> _BlurInputTexture;
+RWTexture2D<float> _BlurOutputTexture;
+groupshared float _BlurCache[BlurCacheSize];
+int _BlurRadius;
+
+[numthreads(8, 8, 1)]
+void Main(uint3 id : SV_DispatchThreadID)
+{
+    uint tBase = id.y * (_RawWidth + 1);
+    uint bBase = (id.y + 1) * (_RawWidth + 1);
+    uint indexLT = tBase + id.x;
+    uint indexRT = tBase + id.x + 1;
+    uint indexLB = bBase + id.x;
+    uint indexRB = bBase + id.x + 1;
+    uint lt = (_RawFOWBuffer.Load(indexLT & ~3) >> ((indexLT & 3) << 3)) & 0xFF;
+    uint rt = (_RawFOWBuffer.Load(indexRT & ~3) >> ((indexRT & 3) << 3)) & 0xFF;
+    uint lb = (_RawFOWBuffer.Load(indexLB & ~3) >> ((indexLB & 3) << 3)) & 0xFF;
+    uint rb = (_RawFOWBuffer.Load(indexRB & ~3) >> ((indexRB & 3) << 3)) & 0xFF;
+    uint patternBaseIndex = (((lt & 1) << 3) | ((rt & 1) << 2) | ((lb & 1) << 1) | (rb & 1)) * 16;
+    
+    uint upscaleWidth = _RawWidth * 4;
+    uint upscaleX = id.x * 4;
+    uint upscaleY = id.y * 4;
+    for (int yy = 0; yy < 4; yy++)
+    {
+        for (int xx = 0; xx < 4; xx++)
+        {
+            uint idx1D = (upscaleY + yy) * upscaleWidth + upscaleX + xx;
+            uint2 idx2D = uint2(upscaleX + xx, upscaleY + yy);
+            float a = _FOWLerpBuffer[idx1D];
+            float b = UpscalePatterns[patternBaseIndex + yy * 4 + xx];
+            _FOWLerpBuffer[idx1D] = lerp(a, b, _LerpAmount);  
+            _FOWTexture[idx2D] = _FOWLerpBuffer[idx1D];
+        }
+    }
+}
+
+[numthreads(BlurNumThreads, 1, 1)]
+void HorizontalBlur(uint3 groupThreadID : SV_GroupThreadID, uint3 dispatchThreadID : SV_DispatchThreadID)
+{
+    int clampedX = min(dispatchThreadID.x, _BlurInputTexture.Length.x - 1);
+    int clampedY = min(dispatchThreadID.y, _BlurInputTexture.Length.y - 1);
+    if (int(groupThreadID.x) < _BlurRadius)
+    {
+        int x = max(clampedX - _BlurRadius, 0);
+        _BlurCache[groupThreadID.x] = _BlurInputTexture[uint2(x, clampedY)];
+    }
+    if (int(groupThreadID.x) >= BlurNumThreads - _BlurRadius)
+    {
+        int x = min(clampedX + _BlurRadius, _BlurInputTexture.Length.x - 1);
+        _BlurCache[groupThreadID.x + 2 * _BlurRadius] = _BlurInputTexture[uint2(x, clampedY)];
+    }
+    _BlurCache[groupThreadID.x + _BlurRadius] = _BlurInputTexture[uint2(clampedX, clampedY)];
+
+    GroupMemoryBarrierWithGroupSync();
+    
+    float a = 0;
+    for (int i = -_BlurRadius; i <= _BlurRadius; i++)
+    {
+        uint k = groupThreadID.x + _BlurRadius + i;
+        a += _BlurWeights[i + _BlurRadius] * _BlurCache[k];
+    }
+    _BlurOutputTexture[dispatchThreadID.xy] = a;
+}
+
+[numthreads(1, BlurNumThreads, 1)]
+void VerticalBlur(uint3 groupThreadID : SV_GroupThreadID, uint3 dispatchThreadID : SV_DispatchThreadID)
+{
+    int clampedX = min(max(dispatchThreadID.x, 0), _BlurInputTexture.Length.x - 1);
+    int clampedY = min(max(dispatchThreadID.y, 0), _BlurInputTexture.Length.y - 1);
+    if (int(groupThreadID.y) < _BlurRadius)
+    {
+        int y = max(clampedY - _BlurRadius, 0);
+        _BlurCache[groupThreadID.y] = _BlurInputTexture[uint2(clampedX, y)];
+    }
+    if (int(groupThreadID.y) >= BlurNumThreads - _BlurRadius)
+    {
+        int y = min(clampedY + _BlurRadius, _BlurInputTexture.Length.y - 1);
+        _BlurCache[groupThreadID.y + 2 * _BlurRadius] = _BlurInputTexture[uint2(clampedX, y)];
+    }
+    _BlurCache[groupThreadID.y + _BlurRadius] = _BlurInputTexture[uint2(clampedX, clampedY)];
+
+    GroupMemoryBarrierWithGroupSync();
+    
+    float a = 0;
+    for (int i = -_BlurRadius; i <= _BlurRadius; i++)
+    {
+        uint k = groupThreadID.y + _BlurRadius + i;
+        a += _BlurWeights[i + _BlurRadius] * _BlurCache[k];
+    }
+    _BlurOutputTexture[dispatchThreadID.xy] = a;
+}
