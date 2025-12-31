@@ -189,7 +189,7 @@ namespace Prototype
             _fowUnits.Add(unit);
             if (IsActivated)
             {
-                bool visible = unit.IsTeammate(_teamMask) || IsVisibleTile(unit.transform.position);
+                bool visible = unit.IsTeammate(_teamMask) || IsVisible(unit.transform.position);
                 unit.SetVisible(visible);
             }
         }
@@ -210,15 +210,10 @@ namespace Prototype
             return _fowUnits.Contains(unit);
         }
 
-        public bool IsVisibleTile(Vector3 worldPos)
+        public bool IsVisible(Vector3 worldPos, int? teamMask = null)
         {
             Vector2Int tilePos = TransformWorldToTilePosition(worldPos);
-            return IsVisibleTile(tilePos);
-        }
-
-        public bool IsVisibleTile(Vector2Int tilePos)
-        {
-            return _grid[tilePos.y, tilePos.x].IsVisible;
+            return IsVisibleTile(tilePos, teamMask ?? _teamMask);
         }
         
         private void Awake()
@@ -432,7 +427,7 @@ namespace Prototype
 
             foreach (var unit in units)
             {
-                bool visible = IsVisibleTile(unit.transform.position);
+                bool visible = IsVisible(unit.transform.position);
                 if (force || unit.IsVisible != visible)
                 {
                     unit.SetVisible(visible);
@@ -541,6 +536,11 @@ namespace Prototype
         private bool IsTilePositionInGridRange(Vector2Int tilePos)
         {
             return tilePos.x >= 0 && tilePos.x < _gridDimensions.x && tilePos.y >= 0 && tilePos.y < _gridDimensions.y;
+        }
+
+        private bool IsVisibleTile(Vector2Int tilePos, int teamMask)
+        {
+            return IsTilePositionInGridRange(tilePos) ? _grid[tilePos.y, tilePos.x].IsVisible(teamMask) : false;
         }
 
         private void OnValidate()
