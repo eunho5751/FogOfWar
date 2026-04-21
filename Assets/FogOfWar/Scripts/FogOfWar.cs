@@ -556,6 +556,7 @@ namespace Prototype
             return IsTilePositionInGridRange(tilePos) ? _grid[tilePos.y, tilePos.x].IsVisible(teamMask) : false;
         }
 
+#if UNITY_EDITOR
         private void OnValidate()
         {
             UpdateFOWBlurProperties();
@@ -584,6 +585,7 @@ namespace Prototype
             
             Gizmos.color = c;
         }
+#endif
 
         public bool IsActivated { get; private set; }
     }
