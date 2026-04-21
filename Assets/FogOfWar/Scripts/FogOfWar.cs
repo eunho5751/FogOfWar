@@ -20,8 +20,28 @@ namespace Prototype
 
         public class Tile
         {
-            public bool IsBlocking;
-            public bool IsVisible;
+            private int _visitFlags;
+            private int _visibleFlags;
+
+            public void SetVisible(int teamLayer, bool visible)
+            {
+                int teamMask = 1 << teamLayer;
+                if (visible)
+                    _visitFlags |= teamMask;
+                _visibleFlags = visible ? (_visibleFlags | teamMask) : (_visibleFlags & ~teamMask);
+            }
+
+            public void Reset(bool visibleOnly)
+            {
+                if (!visibleOnly)
+                    _visitFlags = 0;
+                _visibleFlags = 0;
+            }
+
+            public bool IsVisited(int teamMask) => (_visitFlags & teamMask) != 0;
+            public bool IsVisible(int teamMask) => (_visibleFlags & teamMask) != 0;
+
+            public bool IsBlocking { get; set; }
         }
 
         public class Row
@@ -381,7 +401,7 @@ namespace Prototype
                 for (int x = 0; x < rawWidth; x++)
                 {
                     int index = y * (rawWidth + 1) + x;
-                    _rawFOWArray[index] = _grid[y, x].IsVisible ? (byte)0 : (byte)255;
+                    _rawFOWArray[index] = _grid[y, x].IsVisible(_teamMask) ? (byte)0 : (byte)255;
                 }
             }
 
@@ -410,22 +430,13 @@ namespace Prototype
 
         private void UpdateVisibility(bool force)
         {
-            List<FogOfWarUnit> units = new(_fowUnits);
-            IEnumerable<FogOfWarUnit> teammates = units.Where(x => x.IsTeammate(_teamMask)).ToArray();
-            
             ResetGrid();
-            foreach (var teammate in teammates)
+            foreach (var unit in _fowUnits)
             {
-                UpdateGrid(teammate);
-
-                if (force || !teammate.IsVisible)
-                {
-                    teammate.SetVisible(true);
-                }
-                units.Remove(teammate);
+                UpdateGrid(unit);
             }
 
-            foreach (var unit in units)
+            foreach (var unit in _fowUnits)
             {
                 bool visible = IsVisible(unit.transform.position);
                 if (force || unit.IsVisible != visible)
@@ -441,7 +452,7 @@ namespace Prototype
             {
                 for (int x = 0; x < _gridDimensions.x; x++)
                 {
-                    _grid[y, x].IsVisible = false;
+                    _grid[y, x].Reset(visibleOnly: true);
                 }
             }
         }
@@ -454,7 +465,9 @@ namespace Prototype
             Vector2Int origin = TransformWorldToTilePosition(unit.transform.position);
             if (!IsTilePositionInGridRange(origin))
                 return;
-            _grid[origin.y, origin.x].IsVisible = true;
+
+            var originTile = _grid[origin.y, origin.x];
+            originTile.SetVisible(unit.TeamLayer, true);
 
             for (int i = 0; i < 4; i++)
             {
@@ -476,7 +489,7 @@ namespace Prototype
                         var tile = _grid[tilePos.y, tilePos.x];
                         if (IsColumnInVisionRadius(column, unit.VisionRadius) && (tile.IsBlocking || IsColumnSymmetric(row, column)))
                         {
-                            tile.IsVisible = true;
+                            tile.SetVisible(unit.TeamLayer, true);
                         }
                         if (prevTile != null && prevTile.IsBlocking && !tile.IsBlocking)
                         {
@@ -563,7 +576,7 @@ namespace Prototype
                     for (int x = 0; x < _gridDimensions.x; x++)
                     {
                         Vector3 worldPos = TransformTileToWorldPosition(new(x, y), transform.position.y);
-                        Gizmos.color = _grid[y, x].IsVisible ? Color.green : (_grid[y, x].IsBlocking ? Color.red : Color.gray);
+                        Gizmos.color = _grid[y, x].IsVisible(_teamMask) ? Color.green : (_grid[y, x].IsBlocking ? Color.red : Color.gray);
                         Gizmos.DrawWireSphere(worldPos, 0.1f);
                     }
                 }
