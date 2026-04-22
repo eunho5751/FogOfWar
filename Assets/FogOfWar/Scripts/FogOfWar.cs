@@ -15,7 +15,7 @@ public class FogOfWar : MonoBehaviour
     private bool _activateOnStart = true;
     [SerializeField, Range(1, 60)]
     private int _visibilityUpdateRate = 20;
-    [SerializeField]
+    [SerializeField, TeamMask]
     private int _teamMask;
     [SerializeField]
     private Vector2Int _gridDimensions = new Vector2Int(128, 128);
