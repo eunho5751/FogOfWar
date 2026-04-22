@@ -53,6 +53,8 @@ public class FogOfWar : MonoBehaviour
     private float _scanBoxHeight = 5f;
 
     private Tile[,] _grid;
+    private readonly List<Vector2Int> _columns = new();
+    private readonly Stack<Row> _rows = new();
 
     private ComputeShader _textureProcessorInstance;
     private byte[] _rawFOWArray;
@@ -352,9 +354,10 @@ public class FogOfWar : MonoBehaviour
         int rawHeight = _gridDimensions.y;
         for (int y = 0; y < rawHeight; y++)
         {
+            int rowStart = y * (rawWidth + 1);
             for (int x = 0; x < rawWidth; x++)
             {
-                int index = y * (rawWidth + 1) + x;
+                int index = rowStart + x;
                 var tile = _grid[y, x];
                 byte visibleBit = tile.IsVisible(_teamMask) ? (byte)0 : (byte)1;
                 byte visitedBit = tile.IsVisited(_teamMask) ? (byte)0 : (byte)1;
@@ -432,14 +435,15 @@ public class FogOfWar : MonoBehaviour
         {
             Cardinal cardinal = (Cardinal)i;
             Quadrant quadrant = new(cardinal, _gridDimensions);
-            Stack<Row> rows = new();
 
-            rows.Push(new Row(1, -1f, 1f));
-            while (rows.Count > 0)
+            _rows.Push(new Row(1, -1f, 1f));
+            while (_rows.Count > 0)
             {
-                var row = rows.Pop();
+                var row = _rows.Pop();
                 Tile prevTile = null;
-                foreach (var column in row.GetColumns())
+
+                row.GetColumns(_columns);
+                foreach (var column in _columns)
                 {
                     Vector2Int tilePos = quadrant.TransformColumnToTilePosition(origin, column);
                     if (!IsTilePositionInGridRange(tilePos))
@@ -459,7 +463,7 @@ public class FogOfWar : MonoBehaviour
                         if (row.Depth < unit.VisionRadius / _gridUnitScale && !quadrant.IsReachedGridBoundary(origin, row.Depth))
                         {
                             Row nextRow = new(row.Depth + 1, row.StartSlope, CalculateSlope(column));
-                            rows.Push(nextRow);
+                            _rows.Push(nextRow);
                         }
                     }
                     prevTile = tile;
@@ -469,10 +473,13 @@ public class FogOfWar : MonoBehaviour
                 {
                     if (row.Depth < unit.VisionRadius / _gridUnitScale && !quadrant.IsReachedGridBoundary(origin, row.Depth))
                     {
-                        rows.Push(new Row(row.Depth + 1, row.StartSlope, row.EndSlope));
+                        _rows.Push(new Row(row.Depth + 1, row.StartSlope, row.EndSlope));
                     }
                 }
+
+                _columns.Clear();
             }
+            _rows.Clear();
         }
     }
 

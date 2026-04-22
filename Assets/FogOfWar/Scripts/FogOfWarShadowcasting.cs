@@ -44,16 +44,14 @@ public struct Row
         EndSlope = endSlope;
     }
 
-    public List<Vector2Int> GetColumns()
+    public void GetColumns(List<Vector2Int> columns)
     {
-        List<Vector2Int> columns = new();
         int min = Mathf.RoundToInt(Depth * StartSlope);
         int max = Mathf.RoundToInt(Depth * EndSlope);
         for (int col = min; col <= max; col++)
         {
             columns.Add(new Vector2Int(Depth, col));
         }
-        return columns;
     }
 
     public int Depth { get; set; }
