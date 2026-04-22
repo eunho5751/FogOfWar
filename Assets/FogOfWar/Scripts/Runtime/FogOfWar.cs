@@ -1,8 +1,7 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Threading;
 using UnityEngine;
-using Cysharp.Threading.Tasks;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -69,7 +68,7 @@ namespace EunoLab.FogOfWar
 
 		private GameObject _fowPlane;
 
-		private CancellationTokenSource _fowUpdateCTS;
+		private Coroutine _fowUpdateCoroutine;
 		private readonly List<FogOfWarUnit> _fowUnits = new();
 
 		public void Activate(int? teamMask = null)
@@ -77,9 +76,8 @@ namespace EunoLab.FogOfWar
 			if (teamMask.HasValue)
 				_teamMask = teamMask.Value;
 
-			_fowUpdateCTS = CancellationTokenSource.CreateLinkedTokenSource(destroyCancellationToken);
 			UpdateVisibility(true);
-			UpdateFogOfWar(_fowUpdateCTS.Token).Forget();
+			_fowUpdateCoroutine = StartCoroutine(UpdateFogOfWar());
 
 			IsActivated = true;
 		}
@@ -91,7 +89,11 @@ namespace EunoLab.FogOfWar
 				unit.SetVisible(false);
 			}
 
-			_fowUpdateCTS.Cancel();
+			if (_fowUpdateCoroutine != null)
+			{
+				StopCoroutine(_fowUpdateCoroutine);
+				_fowUpdateCoroutine = null;
+			}
 			IsActivated = false;
 		}
 
@@ -294,12 +296,12 @@ namespace EunoLab.FogOfWar
 			}
 		}
 
-		private async UniTaskVoid UpdateFogOfWar(CancellationToken token)
+		private IEnumerator UpdateFogOfWar()
 		{
 			float time = 0f;
-			while (!token.IsCancellationRequested)
+			while (true)
 			{
-				await UniTask.Yield(PlayerLoopTiming.LastUpdate, token);
+				yield return null;
 
 				float interval = 1f / _visibilityUpdateRate;
 				time += Time.deltaTime;
