@@ -91,10 +91,12 @@ static const float UpscalePatterns[256] =
 };
 
 ByteAddressBuffer _RawFOWBuffer;
-RWBuffer<float> _FOWLerpBuffer;
+RWStructuredBuffer<float2> _FOWLerpBuffer;
 RWTexture2D<float> _FOWTexture;
 uint _RawWidth;
 float _LerpAmount;
+float _UnexploredAreaAlpha;
+float _ExploredAreaAlpha;
 
 Buffer<float> _BlurWeights;
 Texture2D<float> _BlurInputTexture;
@@ -115,8 +117,9 @@ void Main(uint3 id : SV_DispatchThreadID)
     uint rt = (_RawFOWBuffer.Load(indexRT & ~3) >> ((indexRT & 3) << 3)) & 0xFF;
     uint lb = (_RawFOWBuffer.Load(indexLB & ~3) >> ((indexLB & 3) << 3)) & 0xFF;
     uint rb = (_RawFOWBuffer.Load(indexRB & ~3) >> ((indexRB & 3) << 3)) & 0xFF;
-    uint patternBaseIndex = (((lt & 1) << 3) | ((rt & 1) << 2) | ((lb & 1) << 1) | (rb & 1)) * 16;
-    
+    uint visibleBase = (((lt & 1) << 3) | ((rt & 1) << 2) | ((lb & 1) << 1) | (rb & 1)) * 16;
+    uint visitedBase = ((((lt >> 1) & 1) << 3) | (((rt >> 1) & 1) << 2) | (((lb >> 1) & 1) << 1) | ((rb >> 1) & 1)) * 16;
+
     uint upscaleWidth = _RawWidth * 4;
     uint upscaleX = id.x * 4;
     uint upscaleY = id.y * 4;
@@ -126,10 +129,15 @@ void Main(uint3 id : SV_DispatchThreadID)
         {
             uint idx1D = (upscaleY + yy) * upscaleWidth + upscaleX + xx;
             uint2 idx2D = uint2(upscaleX + xx, upscaleY + yy);
-            float a = _FOWLerpBuffer[idx1D];
-            float b = UpscalePatterns[patternBaseIndex + yy * 4 + xx];
-            _FOWLerpBuffer[idx1D] = lerp(a, b, _LerpAmount);  
-            _FOWTexture[idx2D] = _FOWLerpBuffer[idx1D];
+            uint patternOffset = yy * 4 + xx;
+            float2 a = _FOWLerpBuffer[idx1D];
+            float2 b = float2(
+                UpscalePatterns[visibleBase + patternOffset],
+                UpscalePatterns[visitedBase + patternOffset]
+            );
+            float2 result = lerp(a, b, _LerpAmount);
+            _FOWLerpBuffer[idx1D] = result;
+            _FOWTexture[idx2D] = max(result.g * _UnexploredAreaAlpha, result.r * _ExploredAreaAlpha);
         }
     }
 }

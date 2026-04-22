@@ -3,7 +3,6 @@ Shader"FogOfWar/Plane"
     Properties
     {
         _MainTex("Texture", 2D) = "black" {}
-        _FOWColor("Color", Color) = (1, 1, 1, 1)
     }
 
     SubShader
@@ -45,8 +44,6 @@ Shader"FogOfWar/Plane"
             TEXTURE2D(_MainTex);
             SAMPLER(sampler_MainTex);
             float4 _FOWColor;
-            float3 _PlanePos;
-            float3 _PlaneSize;
 
             float GetLinearEyeDepth(float depth)
             {
@@ -77,10 +74,6 @@ Shader"FogOfWar/Plane"
                 float3 worldPos = _WorldSpaceCameraPos + viewPlane * linearDepth;
     
                 // 3. Convert the world position to Plane UV coordinates
-                //float3 planeRelativePos = worldPos - _PlanePos;
-                //float u = planeRelativePos.x / _PlaneSize.x;
-                //float v = planeRelativePos.z / _PlaneSize.z;
-    
                 float3 objectPos = mul(unity_WorldToObject, float4(worldPos, 1)).xyz;
                 objectPos += 5;
                 objectPos /= 10;
