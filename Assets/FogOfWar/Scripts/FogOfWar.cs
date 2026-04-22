@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
-using UnityEngine.Experimental.Rendering;
 using Cysharp.Threading.Tasks;
 
 #if UNITY_EDITOR
@@ -164,7 +163,7 @@ public class FogOfWar : MonoBehaviour
 
     private void InitializeFOWTexture()
     {
-        _fowTexture = new RenderTexture(_gridDimensions.x * 4, _gridDimensions.y * 4, 0, GraphicsFormat.R8_UNorm);
+        _fowTexture = new RenderTexture(_gridDimensions.x * 4, _gridDimensions.y * 4, 0, RenderTextureFormat.R8, RenderTextureReadWrite.Linear);
         _fowTexture.wrapMode = TextureWrapMode.Clamp;
         _fowTexture.filterMode = FilterMode.Bilinear;
         _fowTexture.enableRandomWrite = true;
