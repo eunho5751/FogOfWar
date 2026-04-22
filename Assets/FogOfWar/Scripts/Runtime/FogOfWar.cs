@@ -21,9 +21,9 @@ namespace EunoLab.FogOfWar
 		private int _visibilityUpdateRate = 20;
 		[SerializeField, TeamMask]
 		private int _teamMask;
-		[SerializeField]
+		[SerializeField, Min(1)]
 		private Vector2Int _gridDimensions = new Vector2Int(128, 128);
-		[SerializeField]
+		[SerializeField, Min(0.01f)]
 		private float _gridUnitScale = 0.5f;
 		[SerializeField]
 		private TextAsset _gridDataAsset;
@@ -35,21 +35,21 @@ namespace EunoLab.FogOfWar
 		private float _unexploredAreaAlpha = 0.9f;
 		[SerializeField, Range(0f, 1f)]
 		private float _exploredAreaAlpha = 0.8f;
-		[SerializeField]
+		[SerializeField, Min(0f)]
 		private float _fowLerpSpeed = 3f;
-		[SerializeField]
+		[SerializeField, Min(0)]
 		private int _blurIterations = 9;
-		[SerializeField]
+		[SerializeField, Min(0)]
 		private int _blurRadius = 5;
-		[SerializeField]
+		[SerializeField, Min(0.1f)]
 		private float _blurSigma = 1.5f;
 
 		[Header("Obstacle Scanning")]
 		[SerializeField]
 		private LayerMask _scanMask;
-		[SerializeField]
+		[SerializeField, Min(0f)]
 		private float _scanBoxPadding = 0.05f;
-		[SerializeField]
+		[SerializeField, Min(0f)]
 		private float _scanBoxHeight = 5f;
 
 		private Tile[,] _grid;
