@@ -540,7 +540,7 @@ public class FogOfWar : MonoBehaviour
         UpdateFOWBlurProperties();
     }
 
-    private void OnDrawGizmos()
+    private void OnDrawGizmosSelected()
     {
         Color c = Gizmos.color;
 
