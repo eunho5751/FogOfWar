@@ -5,6 +5,10 @@ using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 using Cysharp.Threading.Tasks;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
 public class FogOfWar : MonoBehaviour
 {
     public static string MainTag => "MainFogOfWar";
@@ -21,6 +25,8 @@ public class FogOfWar : MonoBehaviour
     private Vector2Int _gridDimensions = new Vector2Int(128, 128);
     [SerializeField]
     private float _gridUnitScale = 0.5f;
+    [SerializeField]
+    private TextAsset _gridDataAsset;
 
     [Header("Fog")]
     [SerializeField]
@@ -39,7 +45,6 @@ public class FogOfWar : MonoBehaviour
     private float _blurSigma = 1.5f;
 
     [Header("Obstacle Scanning")]
-
     [SerializeField]
     private LayerMask _scanMask;
     [SerializeField]
@@ -69,8 +74,6 @@ public class FogOfWar : MonoBehaviour
         if (teamMask.HasValue)
             _teamMask = teamMask.Value;
         
-        Scan();
-        
         _fowUpdateCTS = CancellationTokenSource.CreateLinkedTokenSource(destroyCancellationToken);
         UpdateVisibility(true);
         UpdateFogOfWar(_fowUpdateCTS.Token).Forget();
@@ -87,6 +90,14 @@ public class FogOfWar : MonoBehaviour
 
         _fowUpdateCTS.Cancel();
         IsActivated = false;
+    }
+
+    public void ScanGrid()
+    {
+        ScanGrid((pos, isBlocking) =>
+        {
+            _grid[pos.y, pos.x].IsBlocking = isBlocking;
+        });
     }
 
     public void AddUnit(FogOfWarUnit unit)
@@ -216,6 +227,17 @@ public class FogOfWar : MonoBehaviour
 
     private void Start()
     {
+        bool isGridLoaded = false;
+        if (_gridDataAsset != null)
+        {
+            isGridLoaded = LoadGrid(_gridDataAsset);
+        }
+
+        if (!isGridLoaded)
+        {
+            ScanGrid();
+        }
+
         if (_activateOnStart)
         {
             Activate();
@@ -232,7 +254,28 @@ public class FogOfWar : MonoBehaviour
         Destroy(_textureProcessorInstance);
     }
 
-    private void Scan()
+    private bool LoadGrid(TextAsset gridAsset)
+    {
+        var gridData = FogOfWarGridData.Load(gridAsset.bytes);
+        if (gridData.Width != _gridDimensions.x || gridData.Height != _gridDimensions.y)
+        {
+            Debug.LogError($"Grid data size ({gridData.Width}x{gridData.Height}) does not match configured grid dimensions ({_gridDimensions.x}x{_gridDimensions.y}).");
+            return false;
+        }
+
+        for (int y = 0; y < _gridDimensions.y; y++)
+        {
+            for (int x = 0; x < _gridDimensions.x; x++)
+            {
+                int idx = y * _gridDimensions.x + x;
+                _grid[y, x].IsBlocking = gridData.Tiles[idx].IsBlocking;
+            }
+        }
+
+        return true;
+    }
+
+    private void ScanGrid(Action<Vector2Int, bool> onTileScanned)
     {
         Vector3 scanBoxExtents = Vector3.one * 0.5f * _gridUnitScale - Vector3.one * _scanBoxPadding;
         scanBoxExtents.y = _scanBoxHeight * 0.5f;
@@ -242,10 +285,8 @@ public class FogOfWar : MonoBehaviour
             {
                 Vector3 worldPos = TransformTileToWorldPosition(new Vector2Int(x, y), transform.position.y);
                 worldPos.y += scanBoxExtents.y;
-                if (Physics.CheckBox(worldPos, scanBoxExtents, Quaternion.identity, _scanMask, QueryTriggerInteraction.Ignore))
-                {
-                    _grid[y, x].IsBlocking = true;
-                }
+                bool isBlocking = Physics.CheckBox(worldPos, scanBoxExtents, Quaternion.identity, _scanMask, QueryTriggerInteraction.Ignore);
+                onTileScanned(new Vector2Int(x, y), isBlocking);
             }
         }
     }
@@ -475,6 +516,25 @@ public class FogOfWar : MonoBehaviour
     }
 
 #if UNITY_EDITOR
+    [ContextMenu("Save Grid")]
+    private void SaveGrid()
+    {
+        string path = EditorUtility.SaveFilePanelInProject("Save FogOfWar Grid", "GridData", "bytes", "");
+        if (string.IsNullOrEmpty(path))
+            return;
+
+        FogOfWarGridData gridData = new(_gridDimensions.x, _gridDimensions.y);
+        ScanGrid((pos, isBlocking) =>
+        {
+            int idx = pos.y * _gridDimensions.x + pos.x;
+            gridData.Tiles[idx].IsBlocking = isBlocking;
+        });
+
+        gridData.Save(path);
+        AssetDatabase.Refresh();
+        Debug.Log($"Saved to '{path}'");
+    }
+
     private void OnValidate()
     {
         UpdateFOWBlurProperties();
