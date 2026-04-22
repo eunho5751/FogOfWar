@@ -1,9 +1,12 @@
 using UnityEngine.UI;
 
-public class FogOfWarGraphicSwitcher : FogOfWarVisibilityHandlerBase
+namespace EunoLab.FogOfWar
 {
-    private Graphic _graphic;
+	public class FogOfWarGraphicSwitcher : FogOfWarVisibilityHandlerBase
+	{
+		private Graphic _graphic;
 
-    protected override void OnAwake() => TryGetComponent(out _graphic);
-    protected override void OnVisibilityChanged(bool isVisible) => _graphic.enabled = isVisible;
+		protected override void OnAwake() => TryGetComponent(out _graphic);
+		protected override void OnVisibilityChanged(bool isVisible) => _graphic.enabled = isVisible;
+	}
 }

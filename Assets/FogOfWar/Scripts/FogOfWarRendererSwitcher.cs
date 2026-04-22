@@ -1,9 +1,12 @@
-﻿using UnityEngine;
+using UnityEngine;
 
-public class FogOfWarRendererSwitcher : FogOfWarVisibilityHandlerBase
+namespace EunoLab.FogOfWar
 {
-    private Renderer _renderer;
+	public class FogOfWarRendererSwitcher : FogOfWarVisibilityHandlerBase
+	{
+		private Renderer _renderer;
 
-    protected override void OnAwake() => TryGetComponent(out _renderer);
-    protected override void OnVisibilityChanged(bool isVisible) => _renderer.enabled = isVisible;
+		protected override void OnAwake() => TryGetComponent(out _renderer);
+		protected override void OnVisibilityChanged(bool isVisible) => _renderer.enabled = isVisible;
+	}
 }

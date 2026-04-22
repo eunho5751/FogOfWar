@@ -1,5 +1,7 @@
-
-public class FogOfWarGameObjectSwitcher : FogOfWarVisibilityHandlerBase
+namespace EunoLab.FogOfWar
 {
-    protected override void OnVisibilityChanged(bool isVisible) => gameObject.SetActive(isVisible);
+	public class FogOfWarGameObjectSwitcher : FogOfWarVisibilityHandlerBase
+	{
+		protected override void OnVisibilityChanged(bool isVisible) => gameObject.SetActive(isVisible);
+	}
 }

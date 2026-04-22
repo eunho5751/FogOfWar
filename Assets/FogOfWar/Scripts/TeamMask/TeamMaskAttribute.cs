@@ -1,3 +1,6 @@
 using UnityEngine;
 
-public class TeamMaskAttribute : PropertyAttribute { }
+namespace EunoLab.FogOfWar
+{
+	public class TeamMaskAttribute : PropertyAttribute { }
+}
