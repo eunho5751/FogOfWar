@@ -613,6 +613,18 @@ namespace EunoLab.FogOfWar
 
 		public bool IsActivated { get; private set; }
 
+		public int VisibilityUpdateRate
+		{
+			get => _visibilityUpdateRate;
+			set => _visibilityUpdateRate = value;
+		}
+
+		public int TeamMask
+		{
+			get => _teamMask;
+			set => _teamMask = value;
+		}
+
 		public static FogOfWar Main
 		{
 			get
