@@ -6,15 +6,15 @@ namespace EunoLab.FogOfWar
 {
 	public class FogOfWarUnit : MonoBehaviour
 	{
-		[SerializeField]
+		[SerializeField, Tooltip("If enabled, this unit registers itself with FogOfWar.Main on Awake. Disable when you want to register the unit to a specific FogOfWar instance manually.")]
 		private bool _autoRegisterToMain = true;
-		[SerializeField, Range(0, 31)]
+		[SerializeField, Range(0, 31), Tooltip("Team index (0-31) this unit belongs to. Units are visible to any FogOfWar whose team mask includes this layer, and their vision clears fog for the same mask.")]
 		private int _teamLayer = 0;
-		[SerializeField]
+		[SerializeField, Tooltip("If enabled, this unit's vision ignores blocking tiles and reveals fog through walls and other obstacles.")]
 		private bool _ignoreObstacles;
-		[SerializeField]
+		[SerializeField, Tooltip("If enabled, this unit grants vision (clears fog within its radius). Disable for units that should be revealed by allies but not contribute their own sight.")]
 		private bool _hasVision = true;
-		[SerializeField, Min(0)]
+		[SerializeField, Min(0), Tooltip("Vision radius in world units. Tiles within this distance from the unit are revealed each visibility update.")]
 		private float _visionRadius = 5f;
 
 		private void Awake()
