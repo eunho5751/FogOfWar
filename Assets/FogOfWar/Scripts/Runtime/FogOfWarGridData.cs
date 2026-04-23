@@ -14,17 +14,17 @@ namespace EunoLab.FogOfWar
 		}
 
 		[SerializeField]
-		private int _width;
+		private Vector2Int _dimensions;
 		[SerializeField]
-		private int _height;
+		private float _unitScale;
 		[SerializeField]
 		private TileData[] _tiles;
 
-		public FogOfWarGridData(int width, int height)
+		public FogOfWarGridData(Vector2Int dimensions, float unitScale)
 		{
-			_width = width;
-			_height = height;
-			_tiles = new TileData[width * height];
+			_dimensions = dimensions;
+			_unitScale = unitScale;
+			_tiles = new TileData[dimensions.x * dimensions.y];
 			for (int i = 0; i < _tiles.Length; i++)
 			{
 				_tiles[i] = new TileData();
@@ -36,8 +36,9 @@ namespace EunoLab.FogOfWar
 			using var stream = new FileStream(path, FileMode.Create, FileAccess.Write);
 			using var writer = new BinaryWriter(stream);
 
-			writer.Write(_width);
-			writer.Write(_height);
+			writer.Write(_dimensions.x);
+			writer.Write(_dimensions.y);
+			writer.Write(_unitScale);
 
 			int byteCount = (_tiles.Length + 7) / 8;
 			byte[] packed = new byte[byteCount];
@@ -56,7 +57,9 @@ namespace EunoLab.FogOfWar
 
 			int width = reader.ReadInt32();
 			int height = reader.ReadInt32();
-			FogOfWarGridData gridData = new(width, height);
+			float unitScale = reader.ReadSingle();
+			Vector2Int dimensions = new(width, height);
+			FogOfWarGridData gridData = new(dimensions, unitScale);
 			var tiles = gridData._tiles;
 
 			int byteCount = (tiles.Length + 7) / 8;
@@ -69,8 +72,8 @@ namespace EunoLab.FogOfWar
 			return gridData;
 		}
 
-		public int Width => _width;
-		public int Height => _height;
+		public Vector2Int Dimensions => _dimensions;
+		public float UnitScale => _unitScale;
 		public IReadOnlyList<TileData> Tiles => _tiles;
 	}
 }

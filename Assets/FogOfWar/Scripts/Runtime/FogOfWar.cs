@@ -21,6 +21,8 @@ namespace EunoLab.FogOfWar
 		private int _visibilityUpdateRate = 20;
 		[SerializeField, TeamMask]
 		private int _teamMask;
+
+		[Header("Grid")]
 		[SerializeField, Min(1)]
 		private Vector2Int _gridDimensions = new Vector2Int(128, 128);
 		[SerializeField, Min(0.01f)]
@@ -155,13 +157,20 @@ namespace EunoLab.FogOfWar
 
 		private void InitializeGrid()
 		{
-			_grid = new Tile[_gridDimensions.y, _gridDimensions.x];
-			for (int y = 0; y < _gridDimensions.y; y++)
+			if (_gridDataAsset == null)
 			{
-				for (int x = 0; x < _gridDimensions.x; x++)
+				_grid = new Tile[_gridDimensions.y, _gridDimensions.x];
+				for (int y = 0; y < _gridDimensions.y; y++)
 				{
-					_grid[y, x] = new();
+					for (int x = 0; x < _gridDimensions.x; x++)
+					{
+						_grid[y, x] = new();
+					}
 				}
+			}
+			else
+			{
+				LoadGrid(_gridDataAsset);
 			}
 		}
 
@@ -232,13 +241,7 @@ namespace EunoLab.FogOfWar
 
 		private void Start()
 		{
-			bool isGridLoaded = false;
-			if (_gridDataAsset != null)
-			{
-				isGridLoaded = LoadGrid(_gridDataAsset);
-			}
-
-			if (!isGridLoaded)
+			if (_gridDataAsset == null)
 			{
 				ScanGrid();
 			}
@@ -259,25 +262,23 @@ namespace EunoLab.FogOfWar
 			Destroy(_textureProcessorInstance);
 		}
 
-		private bool LoadGrid(TextAsset gridAsset)
+		private void LoadGrid(TextAsset gridAsset)
 		{
 			var gridData = FogOfWarGridData.Load(gridAsset.bytes);
-			if (gridData.Width != _gridDimensions.x || gridData.Height != _gridDimensions.y)
-			{
-				Debug.LogError($"Grid data size ({gridData.Width}x{gridData.Height}) does not match configured grid dimensions ({_gridDimensions.x}x{_gridDimensions.y}).");
-				return false;
-			}
-
+			_gridDimensions = gridData.Dimensions;
+			_gridUnitScale = gridData.UnitScale;
+			_grid = new Tile[_gridDimensions.y, _gridDimensions.x];
 			for (int y = 0; y < _gridDimensions.y; y++)
 			{
 				for (int x = 0; x < _gridDimensions.x; x++)
 				{
 					int idx = y * _gridDimensions.x + x;
-					_grid[y, x].IsBlocking = gridData.Tiles[idx].IsBlocking;
-				}
+                    _grid[y, x] = new Tile
+                    {
+                        IsBlocking = gridData.Tiles[idx].IsBlocking
+                    };
+                }
 			}
-
-			return true;
 		}
 
 		private void ScanGrid(Action<Vector2Int, bool> onTileScanned)
@@ -533,7 +534,7 @@ namespace EunoLab.FogOfWar
 			if (string.IsNullOrEmpty(path))
 				return;
 
-			FogOfWarGridData gridData = new(_gridDimensions.x, _gridDimensions.y);
+			FogOfWarGridData gridData = new(_gridDimensions, _gridUnitScale);
 			ScanGrid((pos, isBlocking) =>
 			{
 				int idx = pos.y * _gridDimensions.x + pos.x;
