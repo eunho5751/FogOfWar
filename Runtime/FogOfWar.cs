@@ -90,6 +90,7 @@ namespace EunoLab.FogOfWar
 			if (teamMask.HasValue)
 				_teamMask = teamMask.Value;
 
+			ClearLerpBuffer();
 			UpdateVisibility(true);
 			_fowUpdateCoroutine = StartCoroutine(UpdateFogOfWar());
 
@@ -209,10 +210,7 @@ namespace EunoLab.FogOfWar
 
 			int fowLerpElementCount = (_gridDimensions.x * 4) * (_gridDimensions.y * 4);
 			_fowLerpBuffer = new ComputeBuffer(fowLerpElementCount, sizeof(float) * 2);
-
-			var initialLerpData = new Vector2[fowLerpElementCount];
-			Array.Fill(initialLerpData, new Vector2(_fogUnexploredAreaAlpha, _fogUnexploredAreaAlpha));
-			_fowLerpBuffer.SetData(initialLerpData);
+			ClearLerpBuffer();
 		}
 
 		private void InitializeTextureProcessor()
@@ -260,6 +258,13 @@ namespace EunoLab.FogOfWar
 			var fowPlaneRenderer = _fowPlane.GetComponent<Renderer>();
 			fowPlaneRenderer.material = fowPlaneMaterial;
 			_fowPlane.GetComponent<Collider>().enabled = false;
+		}
+
+		private void ClearLerpBuffer()
+		{
+			var initialLerpData = new Vector2[_fowLerpBuffer.count];
+			Array.Fill(initialLerpData, new Vector2(_fogUnexploredAreaAlpha, _fogUnexploredAreaAlpha));
+			_fowLerpBuffer.SetData(initialLerpData);
 		}
 
 		private void Start()
@@ -419,7 +424,7 @@ namespace EunoLab.FogOfWar
 
 		private void UpdateVisibility(bool force)
 		{
-			ResetGrid();
+			ResetGrid(!force);
 			foreach (var unit in _fowUnits)
 			{
 				UpdateGrid(unit);
@@ -435,13 +440,13 @@ namespace EunoLab.FogOfWar
 			}
 		}
 
-		private void ResetGrid()
+		private void ResetGrid(bool visibleOnly)
 		{
 			for (int y = 0; y < _gridDimensions.y; y++)
 			{
 				for (int x = 0; x < _gridDimensions.x; x++)
 				{
-					_grid[y, x].Reset(visibleOnly: true);
+					_grid[y, x].Reset(visibleOnly);
 				}
 			}
 		}
