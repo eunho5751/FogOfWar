@@ -11,6 +11,8 @@ namespace EunoLab.FogOfWar
 		[SerializeField, Range(0, 31)]
 		private int _teamLayer = 0;
 		[SerializeField]
+		private bool _ignoreObstacles;
+		[SerializeField]
 		private bool _hasVision = true;
 		[SerializeField, Min(0)]
 		private float _visionRadius = 5f;
@@ -82,6 +84,12 @@ namespace EunoLab.FogOfWar
 		}
 
 		public event Action<bool> VisibilityChanged;
+
+		public bool IgnoreObstacles
+		{
+			get => _ignoreObstacles;
+			set => _ignoreObstacles = value;
+		}
 
 		public bool HasVision
 		{

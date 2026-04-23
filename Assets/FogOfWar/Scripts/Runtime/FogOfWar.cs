@@ -436,6 +436,8 @@ namespace EunoLab.FogOfWar
 			if (!IsTilePositionInGridRange(origin))
 				return;
 
+			bool ignoreObstacles = unit.IgnoreObstacles;
+
 			var originTile = _grid[origin.y, origin.x];
 			originTile.SetVisible(unit.TeamLayer, true);
 
@@ -449,6 +451,7 @@ namespace EunoLab.FogOfWar
 				{
 					var row = _rows.Pop();
 					Tile prevTile = null;
+					bool prevTileBlocks = false;
 
 					row.GetColumns(_columns);
 					foreach (var column in _columns)
@@ -458,15 +461,16 @@ namespace EunoLab.FogOfWar
 							continue;
 
 						var tile = _grid[tilePos.y, tilePos.x];
-						if (IsColumnInVisionRadius(column, unit.VisionRadius) && (tile.IsBlocking || IsColumnSymmetric(row, column)))
+						bool tileBlocks = !ignoreObstacles && tile.IsBlocking;
+						if (IsColumnInVisionRadius(column, unit.VisionRadius) && (tileBlocks || IsColumnSymmetric(row, column)))
 						{
 							tile.SetVisible(unit.TeamLayer, true);
 						}
-						if (prevTile != null && prevTile.IsBlocking && !tile.IsBlocking)
+						if (prevTile != null && prevTileBlocks && !tileBlocks)
 						{
 							row.StartSlope = CalculateSlope(column);
 						}
-						if (prevTile != null && !prevTile.IsBlocking && tile.IsBlocking)
+						if (prevTile != null && !prevTileBlocks && tileBlocks)
 						{
 							if (row.Depth < unit.VisionRadius / _gridUnitScale && !quadrant.IsReachedGridBoundary(origin, row.Depth))
 							{
@@ -475,9 +479,10 @@ namespace EunoLab.FogOfWar
 							}
 						}
 						prevTile = tile;
+						prevTileBlocks = tileBlocks;
 					}
 
-					if (prevTile != null && !prevTile.IsBlocking)
+					if (prevTile != null && !prevTileBlocks)
 					{
 						if (row.Depth < unit.VisionRadius / _gridUnitScale && !quadrant.IsReachedGridBoundary(origin, row.Depth))
 						{
