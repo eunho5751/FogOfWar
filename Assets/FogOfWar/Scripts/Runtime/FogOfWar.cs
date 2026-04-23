@@ -15,43 +15,43 @@ namespace EunoLab.FogOfWar
 		private static FogOfWar _main = null;
 
 		[Header("Basics")]
-		[SerializeField]
+		[SerializeField, Tooltip("If enabled, Activate() is called automatically in Start. Otherwise, you must call Activate() manually from your own code.")]
 		private bool _activateOnStart = true;
-		[SerializeField, Range(1, 60)]
+		[SerializeField, Range(1, 60), Tooltip("How many times per second the visibility (line of sight) grid is recomputed. Higher values react faster but cost more CPU.")]
 		private int _visibilityUpdateRate = 20;
-		[SerializeField, TeamMask]
+		[SerializeField, TeamMask, Tooltip("The team mask this FogOfWar renders from. Fog is cleared by units on these teams.")]
 		private int _teamMask;
 
 		[Header("Grid")]
-		[SerializeField, Min(1)]
+		[SerializeField, Min(1), Tooltip("Size of the fog grid in tiles (width x height). Overwritten by the Grid Data Asset if one is assigned.")]
 		private Vector2Int _gridDimensions = new Vector2Int(128, 128);
-		[SerializeField, Min(0.01f)]
+		[SerializeField, Min(0.01f), Tooltip("World-space size of a single tile. Overwritten by the Grid Data Asset if one is assigned.")]
 		private float _gridUnitScale = 0.5f;
-		[SerializeField]
+		[SerializeField, Tooltip("Pre-scanned grid data (.bytes). When assigned, the runtime obstacle scanning is skipped and obstacle (blocking) info is loaded from this asset instead.")]
 		private TextAsset _gridDataAsset;
 
 		[Header("Fog")]
-		[SerializeField]
+		[SerializeField, Tooltip("Color of the fog.")]
 		private Color _fogColor = Color.black;
-		[SerializeField, Range(0f, 1f)]
+		[SerializeField, Range(0f, 1f), Tooltip("Fog alpha for areas that have never been seen. Closer to 1 means fully opaque.")]
 		private float _fogUnexploredAreaAlpha = 0.9f;
-		[SerializeField, Range(0f, 1f)]
+		[SerializeField, Range(0f, 1f), Tooltip("Fog alpha for areas that have been explored before but are not currently in sight. Typically set a bit lower than the unexplored alpha.")]
 		private float _fogExploredAreaAlpha = 0.8f;
-		[SerializeField, Min(0f)]
+		[SerializeField, Min(0f), Tooltip("Speed at which fog alpha blends toward its target when a tile's visibility state changes.")]
 		private float _fogLerpSpeed = 3f;
-		[SerializeField, Min(0)]
+		[SerializeField, Min(0), Tooltip("Number of Gaussian blur passes applied to the fog texture. More iterations produce softer edges but cost more GPU time.")]
 		private int _fogBlurIterations = 9;
-		[SerializeField, Min(0)]
+		[SerializeField, Min(0), Tooltip("Gaussian blur kernel radius in pixels. Larger values spread the blur wider.")]
 		private int _fogBlurRadius = 5;
-		[SerializeField, Min(0.1f)]
+		[SerializeField, Min(0.1f), Tooltip("Standard deviation (sigma) of the Gaussian blur. Larger values flatten the weight distribution for a softer, wider falloff.")]
 		private float _fogBlurSigma = 1.5f;
 
 		[Header("Obstacle Scanning")]
-		[SerializeField]
+		[SerializeField, Tooltip("Layer mask used to detect colliders that block vision.")]
 		private LayerMask _obstacleScanMask;
-		[SerializeField, Min(0f)]
+		[SerializeField, Min(0f), Tooltip("Inward padding applied to each tile's obstacle-scan box. Prevents colliders that barely spill over into an adjacent tile from marking it as blocking.")]
 		private float _obstacleScanPadding = 0.05f;
-		[SerializeField, Min(0f)]
+		[SerializeField, Min(0f), Tooltip("Height (world units) of the obstacle-scan box. Only colliders inside this vertical extent count as blocking, so set it tall enough to cover any obstacles above the map.")]
 		private float _obstacleScanHeight = 5f;
 
 		private Tile[,] _grid;
