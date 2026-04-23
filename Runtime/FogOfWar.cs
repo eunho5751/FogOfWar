@@ -81,6 +81,12 @@ namespace EunoLab.FogOfWar
 
 		public void Activate(int? teamMask = null)
 		{
+			if (IsActivated)
+			{
+				Debug.LogError("FogOfWar is already activated.");
+				return;
+			}
+
 			if (teamMask.HasValue)
 				_teamMask = teamMask.Value;
 
@@ -93,6 +99,9 @@ namespace EunoLab.FogOfWar
 
 		public void Deactivate()
 		{
+			if (!IsActivated)
+				return;
+
 			foreach (var unit in _fowUnits)
 			{
 				unit.SetVisible(false);
