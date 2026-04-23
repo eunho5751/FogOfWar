@@ -191,6 +191,10 @@ namespace EunoLab.FogOfWar
 
 			int fowLerpElementCount = (_gridDimensions.x * 4) * (_gridDimensions.y * 4);
 			_fowLerpBuffer = new ComputeBuffer(fowLerpElementCount, sizeof(float) * 2);
+
+			var initialLerpData = new Vector2[fowLerpElementCount];
+			Array.Fill(initialLerpData, new Vector2(_fogUnexploredAreaAlpha, _fogUnexploredAreaAlpha));
+			_fowLerpBuffer.SetData(initialLerpData);
 		}
 
 		private void InitializeTextureProcessor()
