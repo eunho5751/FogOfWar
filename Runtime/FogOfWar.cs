@@ -54,6 +54,12 @@ namespace EunoLab.FogOfWar
 		[SerializeField, Min(0f), Tooltip("Height (world units) of the obstacle-scan box. Only colliders inside this vertical extent count as blocking, so set it tall enough to cover any obstacles above the map.")]
 		private float _obstacleScanHeight = 5f;
 
+		[Header("Debug")]
+		[SerializeField, Tooltip("Draws a wireframe gizmo for each tile. Useful for verifying tile size and alignment with the scene.")]
+		private bool _drawTileGizmos;
+		[SerializeField, Tooltip("Draws the obstacle-scan box used per tile to detect blocking colliders. Useful for tuning obstacle scan padding and height.")]
+		private bool _drawObstacleScanGizmos;
+
 		private Tile[,] _grid;
 		private readonly List<Vector2Int> _columns = new();
 		private readonly Stack<Row> _rows = new();
@@ -568,7 +574,7 @@ namespace EunoLab.FogOfWar
 			Vector3 fowPlaneScale = new(_gridDimensions.x * _gridUnitScale, 0.1f, _gridDimensions.y * _gridUnitScale);
 			Gizmos.DrawWireCube(transform.position, fowPlaneScale);
 
-			if (_grid != null)
+			if (_drawTileGizmos && _grid != null)
 			{
 				for (int y = 0; y < _gridDimensions.y; y++)
 				{
@@ -579,6 +585,26 @@ namespace EunoLab.FogOfWar
 						Gizmos.DrawWireSphere(worldPos, 0.1f);
 					}
 				}
+			}
+
+			if (_drawObstacleScanGizmos && _obstacleScanHeight > 0f)
+			{
+				Gizmos.color = Color.skyBlue;
+
+				Vector3 scanBoxSize = Vector3.one * _gridUnitScale - Vector3.one * (_obstacleScanPadding * 2f);
+				scanBoxSize.y = 0f;
+				for (int y = 0; y < _gridDimensions.y; y++)
+				{
+					for (int x = 0; x < _gridDimensions.x; x++)
+					{
+						Vector3 worldPos = TransformTileToWorldPosition(new(x, y), transform.position.y);
+						Gizmos.DrawWireCube(worldPos, scanBoxSize);
+					}	
+				}
+
+				Vector3 pos = transform.position + Vector3.up * (_obstacleScanHeight * 0.5f);
+				Vector3 size = new(_gridDimensions.x * _gridUnitScale, _obstacleScanHeight, _gridDimensions.y * _gridUnitScale);
+				Gizmos.DrawWireCube(pos, size);
 			}
 
 			Gizmos.color = c;
