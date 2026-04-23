@@ -32,27 +32,27 @@ namespace EunoLab.FogOfWar
 
 		[Header("Fog")]
 		[SerializeField]
-		private Color _fowColor = Color.black;
+		private Color _fogColor = Color.black;
 		[SerializeField, Range(0f, 1f)]
-		private float _unexploredAreaAlpha = 0.9f;
+		private float _fogUnexploredAreaAlpha = 0.9f;
 		[SerializeField, Range(0f, 1f)]
-		private float _exploredAreaAlpha = 0.8f;
+		private float _fogExploredAreaAlpha = 0.8f;
 		[SerializeField, Min(0f)]
-		private float _fowLerpSpeed = 3f;
+		private float _fogLerpSpeed = 3f;
 		[SerializeField, Min(0)]
-		private int _blurIterations = 9;
+		private int _fogBlurIterations = 9;
 		[SerializeField, Min(0)]
-		private int _blurRadius = 5;
+		private int _fogBlurRadius = 5;
 		[SerializeField, Min(0.1f)]
-		private float _blurSigma = 1.5f;
+		private float _fogBlurSigma = 1.5f;
 
 		[Header("Obstacle Scanning")]
 		[SerializeField]
-		private LayerMask _scanMask;
+		private LayerMask _obstacleScanMask;
 		[SerializeField, Min(0f)]
-		private float _scanBoxPadding = 0.05f;
+		private float _obstacleScanPadding = 0.05f;
 		[SerializeField, Min(0f)]
-		private float _scanBoxHeight = 5f;
+		private float _obstacleScanHeight = 5f;
 
 		private Tile[,] _grid;
 		private readonly List<Vector2Int> _columns = new();
@@ -232,7 +232,7 @@ namespace EunoLab.FogOfWar
 			var fowPlaneShader = Resources.Load<Shader>("FogOfWarPlaneShader");
 			Material fowPlaneMaterial = new(fowPlaneShader);
 			fowPlaneMaterial.mainTexture = _fowTexture;
-			fowPlaneMaterial.SetColor("_FOWColor", _fowColor);
+			fowPlaneMaterial.SetColor("_FOWColor", _fogColor);
 
 			var fowPlaneRenderer = _fowPlane.GetComponent<Renderer>();
 			fowPlaneRenderer.material = fowPlaneMaterial;
@@ -283,15 +283,15 @@ namespace EunoLab.FogOfWar
 
 		private void ScanGrid(Action<Vector2Int, bool> onTileScanned)
 		{
-			Vector3 scanBoxExtents = Vector3.one * 0.5f * _gridUnitScale - Vector3.one * _scanBoxPadding;
-			scanBoxExtents.y = _scanBoxHeight * 0.5f;
+			Vector3 scanBoxExtents = Vector3.one * 0.5f * _gridUnitScale - Vector3.one * _obstacleScanPadding;
+			scanBoxExtents.y = _obstacleScanHeight * 0.5f;
 			for (int y = 0; y < _gridDimensions.y; y++)
 			{
 				for (int x = 0; x < _gridDimensions.x; x++)
 				{
 					Vector3 worldPos = TransformTileToWorldPosition(new Vector2Int(x, y), transform.position.y);
 					worldPos.y += scanBoxExtents.y;
-					bool isBlocking = Physics.CheckBox(worldPos, scanBoxExtents, Quaternion.identity, _scanMask, QueryTriggerInteraction.Ignore);
+					bool isBlocking = Physics.CheckBox(worldPos, scanBoxExtents, Quaternion.identity, _obstacleScanMask, QueryTriggerInteraction.Ignore);
 					onTileScanned(new Vector2Int(x, y), isBlocking);
 				}
 			}
@@ -320,13 +320,13 @@ namespace EunoLab.FogOfWar
 			if (!Application.isPlaying || _textureProcessorInstance == null)
 				return;
 
-			var blurWeights = GetGaussianWeights(_blurRadius, _blurSigma);
+			var blurWeights = GetGaussianWeights(_fogBlurRadius, _fogBlurSigma);
 			_blurWeightsBuffer?.Dispose();
 			_blurWeightsBuffer = new ComputeBuffer(blurWeights.Length, sizeof(float));
 			_blurWeightsBuffer.SetData(blurWeights);
 			_textureProcessorInstance.SetBuffer(1, "_BlurWeights", _blurWeightsBuffer);
 			_textureProcessorInstance.SetBuffer(2, "_BlurWeights", _blurWeightsBuffer);
-			_textureProcessorInstance.SetInt("_BlurRadius", _blurRadius);
+			_textureProcessorInstance.SetInt("_BlurRadius", _fogBlurRadius);
 		}
 
 		private float[] GetGaussianWeights(int radius, float sigma)
@@ -378,16 +378,16 @@ namespace EunoLab.FogOfWar
 				_rawFOWArray[y * (rawWidth + 1) + rawWidth] = _rawFOWArray[y * (rawWidth + 1) + rawWidth - 1];
 			}
 
-			float lerpAmount = Mathf.Clamp01(Time.deltaTime * _fowLerpSpeed);
+			float lerpAmount = Mathf.Clamp01(Time.deltaTime * _fogLerpSpeed);
 			_rawFOWBuffer.SetData(_rawFOWArray);
 			_textureProcessorInstance.SetFloat("_LerpAmount", lerpAmount);
-			_textureProcessorInstance.SetFloat("_UnexploredAreaAlpha", _unexploredAreaAlpha);
-			_textureProcessorInstance.SetFloat("_ExploredAreaAlpha", _exploredAreaAlpha);
+			_textureProcessorInstance.SetFloat("_UnexploredAreaAlpha", _fogUnexploredAreaAlpha);
+			_textureProcessorInstance.SetFloat("_ExploredAreaAlpha", _fogExploredAreaAlpha);
 			_textureProcessorInstance.Dispatch(0, _numMainKernelThreadGroups.x, _numMainKernelThreadGroups.y, 1);
 
 			// You don't need to insert fences between dispatches.
 			// Unity handles resource dependencies automatically.
-			for (int i = 0; i < _blurIterations; i++)
+			for (int i = 0; i < _fogBlurIterations; i++)
 			{
 				_textureProcessorInstance.Dispatch(1, _numBlurKernelThreadGroups.x, _fowTexture.height, 1);
 				_textureProcessorInstance.Dispatch(2, _fowTexture.width, _numBlurKernelThreadGroups.y, 1);
