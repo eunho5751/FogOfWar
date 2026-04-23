@@ -592,15 +592,20 @@ namespace EunoLab.FogOfWar
 			Vector3 fowPlaneScale = new(_gridDimensions.x * _gridUnitScale, 0.1f, _gridDimensions.y * _gridUnitScale);
 			Gizmos.DrawWireCube(transform.position, fowPlaneScale);
 
-			if (_drawTileGizmos && _grid != null)
+			if (_drawTileGizmos)
 			{
+				Color color = Color.gray;
+				Gizmos.color = color;
+				
+				Vector3 size = new(_gridUnitScale, 0.1f, _gridUnitScale);
 				for (int y = 0; y < _gridDimensions.y; y++)
 				{
 					for (int x = 0; x < _gridDimensions.x; x++)
 					{
 						Vector3 worldPos = TransformTileToWorldPosition(new(x, y), transform.position.y);
-						Gizmos.color = _grid[y, x].IsVisible(_teamMask) ? Color.green : (_grid[y, x].IsBlocking ? Color.red : Color.gray);
-						Gizmos.DrawWireSphere(worldPos, 0.1f);
+						if (IsActivated)
+							Gizmos.color = _grid[y, x].IsVisible(_teamMask) ? Color.green : (_grid[y, x].IsBlocking ? Color.red : color);
+						Gizmos.DrawWireCube(worldPos, size);
 					}
 				}
 			}
