@@ -1,0 +1,12 @@
+{
+  "name": "com.eunho5751.fogofwar",
+  "version": "1.0.0",
+  "displayName": "Fog Of War",
+  "description": "Fog of war for Unity URP",
+  "unity": "2022.3",
+  "author": {
+    "name": "eunho5751",
+    "email": "eunho5751@naver.com"
+  },
+  "dependencies": {}
+}
