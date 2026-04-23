@@ -38,7 +38,7 @@ _※ The `AutoRegisterToMain` option on the `FogOfWarUnit` component accesses th
 #### (3) Prepare unit prefabs
 For objects that should provide vision or be hidden by the fog (players, enemies, structures, etc.):
 - Add a `FogOfWarUnit` component (attach it to the root or topmost GameObject).
-- If you need show/hide behavior, add a `FogOfWarRendererSwitcher` or `FogOfWarGraphicSwitcher` on a child object.
+- If you need show/hide behavior, add a `FogOfWarRendererSwitcher` or `FogOfWarGraphicSwitcher` component.
 
 #### (4) (Optional) Pre-scan the grid data
 If the **`Grid Data Asset`** field on the `FogOfWar` component is not assigned, obstacles are scanned automatically during initialization.

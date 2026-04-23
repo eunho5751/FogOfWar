@@ -38,7 +38,7 @@ _※ `ForOfWarUnit` 컴포넌트의 `AutoRegisterToMain` 옵션은 `FogOfWarUnit
 #### (3) 유닛 프리팹 준비
 시야를 밝히거나 안개에 의해 숨겨져야 하는 오브젝트(플레이어, 적, 구조물 등)에는:
 - `FogOfWarUnit` 컴포넌트를 추가 (루트 또는 최상위 GameObject에 부착)
-- 숨김/표시 처리가 필요하다면 자식 오브젝트에 `FogOfWarRendererSwitcher` 또는 `FogOfWarGraphicSwitcher`를 추가
+- 숨김/표시 처리가 필요하다면 `FogOfWarRendererSwitcher` 또는 `FogOfWarGraphicSwitcher` 컴포넌트를 추가
 
 #### (4) (선택) 그리드 데이터 프리스캔
 `FogOfWar` 컴포넌트의 **`Grid Data Asset`**이 할당되어 있지 않다면, 컴포넌트 초기화 시 자동으로 장애물을 스캔합니다.  
