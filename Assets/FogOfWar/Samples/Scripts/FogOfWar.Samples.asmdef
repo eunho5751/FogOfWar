@@ -1,0 +1,17 @@
+{
+    "name": "FogOfWar.Samples",
+    "rootNamespace": "",
+    "references": [
+        "GUID:ddffd8553b746394b89916c54f3b2231",
+        "GUID:75469ad4d38634e559750d17036d5f7c"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
