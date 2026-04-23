@@ -14,7 +14,7 @@ Unity용 그리드 기반 전장의 안개(Fog of War) 패키지입니다. Shado
 
 ### 1. 설치
 
-Unity Package Manager → **＋** → Install package from git URL → https://github.com/eunho5751/FogOfWar.git 입력 → Install  
+Unity Package Manager → **＋** → Install package from git URL → https://github.com/eunho5751/FogOfWar.git#1.0.0 입력 → Install  
 
 <img width="267" height="221" alt="image" src="https://github.com/user-attachments/assets/b2e75504-224d-4731-9605-3432779dc2da" />  
 <br>
