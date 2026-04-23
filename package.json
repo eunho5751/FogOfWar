@@ -8,5 +8,12 @@
     "name": "eunho5751",
     "email": "eunho5751@naver.com"
   },
-  "dependencies": {}
+  "dependencies": {},
+  "samples": [
+    {
+      "displayName": "FogOfWar Demo",
+      "description": "",
+      "path": "Samples~/Demo"
+    }
+  ]
 }
