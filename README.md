@@ -26,7 +26,7 @@ Unity Package Manager → **＋** → Install package from git URL → enter htt
 
 #### (1) Add the `MainFogOfWar` tag
 Add a **`MainFogOfWar`** tag in Unity's **Tags & Layers** settings.
-A `FogOfWar` instance with this tag can be accessed at runtime via `FogOfWar.Main`.
+A `FogOfWar` instance with this tag can be accessed at runtime via `FogOfWar.Main`.  
 _※ The `AutoRegisterToMain` option on the `FogOfWarUnit` component accesses the global `FogOfWar` instance through `FogOfWar.Main`, so the tag is required whenever that option is enabled._
 
 #### (2) Place the FogOfWar GameObject
