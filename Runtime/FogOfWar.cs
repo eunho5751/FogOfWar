@@ -87,6 +87,7 @@ namespace EunoLab.FogOfWar
 			UpdateVisibility(true);
 			_fowUpdateCoroutine = StartCoroutine(UpdateFogOfWar());
 
+			_fowPlane.SetActive(true);
 			IsActivated = true;
 		}
 
@@ -102,6 +103,8 @@ namespace EunoLab.FogOfWar
 				StopCoroutine(_fowUpdateCoroutine);
 				_fowUpdateCoroutine = null;
 			}
+
+			_fowPlane.SetActive(false);
 			IsActivated = false;
 		}
 
@@ -238,6 +241,7 @@ namespace EunoLab.FogOfWar
 			_fowPlane.name = "FOW Plane";
 			_fowPlane.transform.SetParent(transform, false);
 			_fowPlane.transform.localScale = new Vector3((_gridDimensions.x * _gridUnitScale) / 10f, 1f, (_gridDimensions.y * _gridUnitScale) / 10f);
+			_fowPlane.SetActive(false);
 
 			var fowPlaneShader = Resources.Load<Shader>("FogOfWarPlaneShader");
 			Material fowPlaneMaterial = new(fowPlaneShader);
