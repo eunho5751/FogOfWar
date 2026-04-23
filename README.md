@@ -1,7 +1,9 @@
 # FogOfWar for Unity
+[![en](https://img.shields.io/badge/lang-en-red.svg)](https://github.com/eunho5751/FogOfWar/blob/master/README.md)
+[![ko](https://img.shields.io/badge/lang-ko-green.svg)](https://github.com/eunho5751/FogOfWar/blob/master/README.ko.md)
 
-Unity용 그리드 기반 전장의 안개(Fog of War) 패키지입니다. Shadowcasting 알고리즘으로 구현되었습니다.
-- **Unity**: 2022.3 이상
+A grid-based Fog of War package for Unity, implemented with the Shadowcasting algorithm.
+- **Unity**: 2022.3 or later
 - **Namespace**: `EunoLab.FogOfWar`
 
 <img width="594" height="298" alt="image" src="https://github.com/user-attachments/assets/659fc0e1-426d-4308-9a0e-92766b70a070" />
@@ -10,9 +12,9 @@ Unity용 그리드 기반 전장의 안개(Fog of War) 패키지입니다. Shado
 
 ---
 
-### 1. 설치
+### 1. Installation
 
-Unity Package Manager → **＋** → Install package from git URL → https://github.com/eunho5751/FogOfWar.git 입력 → Install  
+Unity Package Manager → **＋** → Install package from git URL → enter https://github.com/eunho5751/FogOfWar.git → Install
 
 <img width="267" height="221" alt="image" src="https://github.com/user-attachments/assets/b2e75504-224d-4731-9605-3432779dc2da" />  
 <br>
@@ -20,81 +22,81 @@ Unity Package Manager → **＋** → Install package from git URL → https://g
 
 ---
 
-### 2. 씬 필수 설정
+### 2. Required Scene Setup
 
-#### (1) `MainFogOfWar` 태그 추가
-Unity의 **Tags & Layers** 설정에 **`MainFogOfWar`** 태그를 추가해야 합니다.  
-태그가 설정된 `FogOfWar` 인스턴스는 런타임에 `FogOfWar.Main`으로 접근할 수 있습니다.  
-_※ `ForOfWarUnit` 컴포넌트의 `AutoRegisterToMain` 옵션은 `FogOfWarUnit.Main`을 통해 전역 `FogOfWar` 인스턴스에 접근하므로 해당 옵션이 켜져있다면 반드시 태그가 필요합니다._
+#### (1) Add the `MainFogOfWar` tag
+Add a **`MainFogOfWar`** tag in Unity's **Tags & Layers** settings.
+A `FogOfWar` instance with this tag can be accessed at runtime via `FogOfWar.Main`.
+_※ The `AutoRegisterToMain` option on the `FogOfWarUnit` component accesses the global `FogOfWar` instance through `FogOfWar.Main`, so the tag is required whenever that option is enabled._
 
-#### (2) FogOfWar GameObject 배치
-1. 빈 GameObject를 만들고 **Tag를 `MainFogOfWar`** 로 설정합니다.
-2. `FogOfWar` 컴포넌트를 추가합니다.
-3. 이 GameObject의 **position**이 그리드의 중심(center)이 됩니다. 맵 위에 맞춰 배치하세요. (기즈모를 키면 그리드 영역을 확인할 수 있음)
-4. **Obstacle Scan Mask**에 시야를 차단할 장애물(벽 등) 콜라이더가 속한 레이어를 지정합니다.
+#### (2) Place the FogOfWar GameObject
+1. Create an empty GameObject and set its **Tag to `MainFogOfWar`**.
+2. Add the `FogOfWar` component to it.
+3. The GameObject's **position** becomes the center of the grid. Place it to match your map. (Enable the gizmos to visualize the grid area.)
+4. Assign the layer of your vision-blocking colliders (walls, etc.) to **Obstacle Scan Mask**.
 
-#### (3) 유닛 프리팹 준비
-시야를 밝히거나 안개에 의해 숨겨져야 하는 오브젝트(플레이어, 적, 구조물 등)에는:
-- `FogOfWarUnit` 컴포넌트를 추가 (루트 또는 최상위 GameObject에 부착)
-- 숨김/표시 처리가 필요하다면 자식 오브젝트에 `FogOfWarRendererSwitcher` 또는 `FogOfWarGraphicSwitcher`를 추가
+#### (3) Prepare unit prefabs
+For objects that should provide vision or be hidden by the fog (players, enemies, structures, etc.):
+- Add a `FogOfWarUnit` component (attach it to the root or topmost GameObject).
+- If you need show/hide behavior, add a `FogOfWarRendererSwitcher` or `FogOfWarGraphicSwitcher` on a child object.
 
-#### (4) (선택) 그리드 데이터 프리스캔
-`FogOfWar` 컴포넌트의 **`Grid Data Asset`**이 할당되어 있지 않다면, 컴포넌트 초기화 시 자동으로 장애물을 스캔합니다.  
-런타임 중에 장애물 스캔을 생략하려면:
-1. `FogOfWar` 컴포넌트의 컨텍스트 메뉴에서 **Save Grid** 클릭 → `.bytes` 파일 생성
-2. 생성된 `.bytes` 파일을 `FogOfWar`의 **Grid Data Asset** 필드에 할당
+#### (4) (Optional) Pre-scan the grid data
+If the **`Grid Data Asset`** field on the `FogOfWar` component is not assigned, obstacles are scanned automatically during initialization.
+To skip the runtime obstacle scan:
+1. Click **Save Grid** in the `FogOfWar` component's context menu → a `.bytes` file is generated.
+2. Assign the generated `.bytes` file to the `FogOfWar`'s **Grid Data Asset** field.
 
 ---
 
-### 3. 주요 스크립트
+### 3. Main Scripts
 
-#### `FogOfWar` (필수)
-전장의 안개 시스템의 메인 컨트롤러입니다. 그리드 생성, 시야 업데이트, 안개 텍스처 렌더링을 모두 관리합니다.
+#### `FogOfWar` (required)
+The main controller of the fog of war system. Handles grid generation, visibility updates, and fog texture rendering.
 
-**주요 API**
-- `Activate(int? teamMask = null)` / `Deactivate()` — 전장의 안개 시스템 ON / OFF
-- `ScanGrid()` — 현재 씬의 장애물을 다시 스캔하여 그리드 갱신
+**Main API**
+- `Activate(int? teamMask = null)` / `Deactivate()` — turn the fog of war system ON / OFF
+- `ScanGrid()` — rescan obstacles in the current scene and refresh the grid
 - `AddUnit(FogOfWarUnit)` / `RemoveUnit(FogOfWarUnit)` / `ContainsUnit(FogOfWarUnit)`
-- `IsVisible(Vector3 worldPos, int? teamMask = null)` — 특정 월드 위치의 시야 여부
-- `static FogOfWar.Main` — `MainFogOfWar` 태그를 가진 인스턴스 반환
-- `IsActivated` — 현재 활성 상태
-- `VisibilityUpdateRate` — 가시성 갱신 빈도
-- `TeamMask` — 시야를 보여줄 팀 레이어 마스크
+- `IsVisible(Vector3 worldPos, int? teamMask = null)` — whether a given world position is currently visible
+- `static FogOfWar.Main` — returns the instance tagged with `MainFogOfWar`
+- `IsActivated` — current activation state
+- `VisibilityUpdateRate` — visibility refresh frequency
+- `TeamMask` — the team layer mask whose vision is rendered
 
 ---
 
 #### `FogOfWarUnit`
-시야를 제공하거나 안개에 의해 가려지는 오브젝트에 부착합니다.
+Attach to objects that should provide vision or be hidden by the fog.
 
-**주요 API / 이벤트**
-- `event Action<bool> VisibilityChanged` — 유닛의 가시성이 바뀔 때 호출
-- `bool IsVisible` — 현재 가시성
-- `bool IsTeammate(int teamMask)` — 주어진 마스크와 같은 팀인지
+**Main API / Events**
+- `event Action<bool> VisibilityChanged` — raised when the unit's visibility changes
+- `bool IsVisible` — current visibility
+- `bool IsTeammate(int teamMask)` — whether the unit belongs to the given mask
 
 ---
 
-#### `FogOfWarVisibilityHandlerBase` (추상 클래스)
-`FogOfWarUnit`의 가시성 변화 이벤트를 구독한 추상 클래스입니다.
+#### `FogOfWarVisibilityHandlerBase` (abstract class)
+An abstract class that subscribes to a `FogOfWarUnit`'s visibility-change event.
 
-**오버라이드 가능한 메서드**
+**Overridable methods**
 - `OnAwake()`, `OnEnabled()`, `OnDisabled()`
-- `OnVisibilityChanged(bool isVisible)` — 가시성 변경 시 호출
+- `OnVisibilityChanged(bool isVisible)` — called when visibility changes
 
-예: 안개에 가려졌을 때 사운드를 음소거하거나 AI 상태를 바꾸는 등 커스텀 동작을 붙일 때 이 클래스를 상속해 구현하세요.
-_(`FogOfWarRendererSwitchter`, `FogOfWarGraphicSwitcher` 컴포넌트가 이 클래스를 상속하여 구현되었음)_
+Example: inherit from this class to add custom behavior such as muting audio or switching AI states when a unit is hidden by fog.
+_(The `FogOfWarRendererSwitcher` and `FogOfWarGraphicSwitcher` components are implemented by inheriting from this class.)_
 
 ---
 
 #### `FogOfWarRendererSwitcher`
-같은 GameObject의 `Renderer` 컴포넌트를 가시성에 따라 ON/OFF 합니다.
+Turns the `Renderer` component on the same GameObject ON/OFF based on visibility.
 
 #### `FogOfWarGraphicSwitcher`
-같은 GameObject의 UI `Graphic` 컴포넌트(Image, Text 등)를 가시성에 따라 ON/OFF 합니다.
+Turns a UI `Graphic` component (Image, Text, etc.) on the same GameObject ON/OFF based on visibility.
 
 ---
 
 #### `TeamMaskAttribute`
-`int` 필드에 붙이면 인스펙터에서 0~31번 팀을 체크박스 마스크로 편집할 수 있습니다.
+When applied to an `int` field, lets you edit teams 0–31 in the inspector as a checkbox mask.
 
 ```csharp
 [SerializeField, TeamMask] private int _allowedTeams;
@@ -102,15 +104,15 @@ _(`FogOfWarRendererSwitchter`, `FogOfWarGraphicSwitcher` 컴포넌트가 이 클
 
 ---
 
-### 4. 팀 레이어
+### 4. Team Layers
 
-- 팀은 0~31번의 **Layer 번호**로 식별됩니다 (Unity Layer와는 별개).
-- `FogOfWar.TeamMask`는 비트마스크 — 여러 팀의 시야를 동시에 볼 수 있습니다.
-- `FogOfWarUnit.TeamLayer`는 단일 레이어 번호 — 그 팀의 시야로 주변 안개를 걷어냅니다.
+- Teams are identified by **layer numbers from 0 to 31** (separate from Unity Layers).
+- `FogOfWar.TeamMask` is a bitmask — multiple teams' vision can be displayed at the same time.
+- `FogOfWarUnit.TeamLayer` is a single layer number — that team's vision clears the surrounding fog.
 
 ---
 
-### 5. 샘플
+### 5. Sample
 
-- Unity Package Manager의 **Samples → Import**로 불러올 수 있습니다.
-- 기본적으로 다른 설정 없이도 플레이가 가능하나, Demo 씬 내 `Obstacles` 오브젝트들에 장애물 레이어를 할당하고 `FogOfWar` 컴포넌트의 `Obstacle Scan Mask`에 장애물 레이어를 포함시키면 장애물에 의해 시야가 막히는 것을 확인할 수 있습니다.
+- Import via Unity Package Manager → **Samples → Import**.
+- The demo is playable out of the box without additional setup. However, if you assign an obstacle layer to the `Obstacles` objects in the demo scene and include that layer in the `FogOfWar` component's `Obstacle Scan Mask`, you can see vision being blocked by the obstacles.
