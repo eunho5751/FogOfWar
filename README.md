@@ -48,7 +48,34 @@ To skip the runtime obstacle scan:
 
 ---
 
-### 3. Main Scripts
+### 3. Tuning FogOfWar Quality
+
+The quality of the fog of war depends heavily on the `FogOfWar` component's settings, so here are a few essential options worth understanding.
+
+#### (1) Grid Settings
+<img width="577" height="64" alt="image" src="https://github.com/user-attachments/assets/77932960-e6ba-49e5-8eec-70e66b8fb33c" />
+<br>
+
+**`Grid Dimensions`** : The number of tiles. Higher values increase the resolution of the fog texture and allow the grid to cover a larger area at the **same tile size**.  
+**`Grid Unit Scale`** : The world-space size of each tile. Larger values make each tile bigger, letting the grid cover a larger area at the **same fog texture resolution**.  
+
+As shown above, both `Grid Dimensions` and `Grid Unit Scale` can be used to control the area covered by the grid in the world, but adjusting only one of them can cause problems.  
+(&#10060;) Covering a large area by only increasing `Grid Dimensions` raises the fog texture resolution, which increases CPU/GPU processing cost.  
+(&#10060;) Covering a large area by only increasing `Grid Unit Scale` means many fog texture pixels have to be rendered per single tile, which lowers the visual quality of the fog.  
+(&#9989;) Adjust both settings together to find the right balance of grid size and tile size for your project. (Use the gizmos to help.)
+
+#### (2) Fog Settings
+<img width="328" height="90" alt="image" src="https://github.com/user-attachments/assets/0d643ea6-7bd7-4eb0-a85d-12ac05e94259" />
+<br>
+
+**`Fog Lerp Speed`** : Fog interpolation speed. Higher values make the fog texture react to changes more quickly.  
+**`Fog Blur Iterations/Radius/Sigma`** : Settings used for the Gaussian blur, applied to soften the vision boundaries.
+
+<img width="697" height="290" alt="image" src="https://github.com/user-attachments/assets/b04a8e03-df60-49e1-8ead-1104009be21f" />
+
+---
+
+### 4. Main Scripts
 
 #### `FogOfWar` (required)
 The main controller of the fog of war system. Handles grid generation, visibility updates, and fog texture rendering.
@@ -104,7 +131,7 @@ When applied to an `int` field, lets you edit teams 0–31 in the inspector as a
 
 ---
 
-### 4. Team Layers
+### 5. Team Layers
 
 - Teams are identified by **layer numbers from 0 to 31** (separate from Unity Layers).
 - `FogOfWar.TeamMask` is a bitmask — multiple teams' vision can be displayed at the same time.
@@ -112,7 +139,7 @@ When applied to an `int` field, lets you edit teams 0–31 in the inspector as a
 
 ---
 
-### 5. Sample
+### 6. Sample
 
 - Import via Unity Package Manager → **Samples → Import**.
 - The demo is playable out of the box without additional setup. However, if you assign an obstacle layer to the `Obstacles` objects in the demo scene and include that layer in the `FogOfWar` component's `Obstacle Scan Mask`, you can see vision being blocked by the obstacles.
