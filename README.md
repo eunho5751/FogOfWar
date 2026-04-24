@@ -14,7 +14,7 @@ A grid-based Fog of War package for Unity, implemented with the Shadowcasting al
 
 ### 1. Installation
 
-Unity Package Manager → **＋** → Install package from git URL → enter https://github.com/eunho5751/FogOfWar.git#1.0.0 → Install
+Unity Package Manager → **＋** → Install package from git URL → enter https://github.com/eunho5751/FogOfWar.git#1.0.1 → Install
 
 <img width="267" height="221" alt="image" src="https://github.com/user-attachments/assets/b2e75504-224d-4731-9605-3432779dc2da" />  
 <br>

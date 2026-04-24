@@ -11,7 +11,7 @@ Shader"FogOfWar/Plane"
         { 
             "RenderType" = "Opaque"
             "Queue" = "Transparent"
-            "RenderPipeline" = "UniversalRenderPipeline"
+            "RenderPipeline" = "UniversalPipeline"
         }
 
         Blend SrcAlpha OneMinusSrcAlpha
