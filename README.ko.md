@@ -48,7 +48,34 @@ _※ `ForOfWarUnit` 컴포넌트의 `AutoRegisterToMain` 옵션은 `FogOfWarUnit
 
 ---
 
-### 3. 주요 스크립트
+### 3. FogOfWar 품질 조정
+
+FogOfWar 컴포넌트 설정에 따라 전장의 안개 품질이 크게 달라지므로, 여기에 필수 설정 몇 가지를 설명하겠습니다.
+
+#### (1) 그리드 설정
+<img width="577" height="64" alt="image" src="https://github.com/user-attachments/assets/77932960-e6ba-49e5-8eec-70e66b8fb33c" />
+<br>
+
+**`Grid Dimensions`** : 타일의 수. 값이 클수록 안개 텍스처의 해상도가 증가하며, 월드에서 **같은 타일의 크기**로 더 넓은 영역을 커버하게 됩니다.  
+**`Grid Unit Scale`** : 월드에서 각 타일의 크기. 값이 클수록 타일의 크기가 증가하므로 **같은 안개 텍스처의 해상도**로 더 넓은 영역을 커버하게 됩니다.  
+
+위 설명에서 볼 수 있듯이, `Grid Dimensions`, `Grid Unit Scale` 둘 다 월드에서 그리드가 커버하는 영역을 조절할 수 있지만 어느 한 쪽만 키우거나 줄이게 되면 문제가 생길 수 있습니다.  
+(&#10060;) `Grid Dimensions` 설정만을 통해 넓은 영역을 커버하게 되면 안개 텍스처의 해상도가 증가하고 CPU/GPU 처리 비용이 증가하게 됩니다.  
+(&#10060;) `Grid Unit Scale` 설정만을 통해 넓은 영역을 커버하게 되면 월드에서 타일 하나당 안개 텍스처의 많은 픽셀들이 그려져야하므로 전장의 안개 품질이 낮아지게 됩니다.  
+(&#9989;) 두 설정을 같이 조절하면서 내 프로젝트에 맞는 그리드 크기와 타일 크기의 적정 값을 찾습니다. (Gizmos 활용)
+
+#### (2) 안개 설정
+<img width="328" height="90" alt="image" src="https://github.com/user-attachments/assets/0d643ea6-7bd7-4eb0-a85d-12ac05e94259" />
+<br>
+
+**`Fog Lerp Speed`** : 안개 보간 속도, 값이 클수록 안개 텍스처가 변화에 빠르게 반응합니다.  
+**`Fog Blur Iterations/Radius/Sigma`** : 가우시안 블러에 사용되는 설정들로, 시야 경계를 부드럽게 하기 위해 사용됩니다.
+
+<img width="697" height="290" alt="image" src="https://github.com/user-attachments/assets/b04a8e03-df60-49e1-8ead-1104009be21f" />
+
+---
+
+### 4. 주요 스크립트
 
 #### `FogOfWar` (필수)
 전장의 안개 시스템의 메인 컨트롤러입니다. 그리드 생성, 시야 업데이트, 안개 텍스처 렌더링을 모두 관리합니다.
@@ -104,7 +131,7 @@ _(`FogOfWarRendererSwitchter`, `FogOfWarGraphicSwitcher` 컴포넌트가 이 클
 
 ---
 
-### 4. 팀 레이어
+### 5. 팀 레이어
 
 - 팀은 0~31번의 **Layer 번호**로 식별됩니다 (Unity Layer와는 별개).
 - `FogOfWar.TeamMask`는 비트마스크 — 여러 팀의 시야를 동시에 볼 수 있습니다.
@@ -112,7 +139,7 @@ _(`FogOfWarRendererSwitchter`, `FogOfWarGraphicSwitcher` 컴포넌트가 이 클
 
 ---
 
-### 5. 샘플
+### 6. 샘플
 
 - Unity Package Manager의 **Samples → Import**로 불러올 수 있습니다.
 - 기본적으로 다른 설정 없이도 플레이가 가능하나, Demo 씬 내 `Obstacles` 오브젝트들에 장애물 레이어를 할당하고 `FogOfWar` 컴포넌트의 `Obstacle Scan Mask`에 장애물 레이어를 포함시키면 장애물에 의해 시야가 막히는 것을 확인할 수 있습니다.
